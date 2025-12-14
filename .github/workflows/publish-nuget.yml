@@ -34,6 +34,9 @@ jobs:
           VERSION=${{ github.event.release.tag_name }} 
           VERSION=${VERSION#v}
           dotnet pack Azure.Functions.DistributedLock/Azure.Functions.DistributedLock.csproj --configuration Release --no-build -p:PackageVersion=$VERSION
+
+      - name: Install Latest NuGet CLI (Diagnostic)
+        run: dotnet tool install -g nuget.cli
           
       # 3. UPDATED STEP: Push using OIDC token (no separate API key required)
       - name: Push to NuGet (Trusted Publishing)
