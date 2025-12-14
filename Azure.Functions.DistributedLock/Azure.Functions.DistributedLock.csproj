@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    
+    <!-- NuGet package metadata -->
+    <PackageId>Azure.Functions.DistributedLock</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>chriscdev</Authors>
+    <Company>chriscdev</Company>
+    <Description>Distributed lock utilities for Azure Functions using blob storage.</Description>
+    <PackageTags>azure functions distributed-lock blob storage</PackageTags>
+    <RepositoryUrl>https://github.com/chriscdev/Azure.Functions.DistributedLock</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" Version="2.51.0" />
+  </ItemGroup>
+
+</Project>
