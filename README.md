@@ -209,14 +209,15 @@ public async Task RunMigrationScript(TimeSpan maxWait)
 
 PRs welcome. Follow .NET coding conventions and include tests for behavioral changes.
 
-##🚀 Features* **Custom Attribute:** Use `[DistributedLock]` for clean, declarative locking on function methods.
+##🚀 Features* **Custom Attribute:** Use `[Singleton]` or `[DistributedLock]` for clean, declarative locking on function methods.
 * **Dynamic Keying:** Supports dynamic key interpolation (e.g., `[DistributedLock("Order-{Id}")]`) based on function input parameters.
 * **Safe Lease Management:** Automatically acquires the lease, manages **background renewal** to prevent lease expiration during long-running functions, and guarantees release via `IAsyncDisposable`.
 * **Testable Architecture:** Built around `IDistributedLockHandler` and a virtual factory hook for easy mocking.
 
 ---
 
-### 1. Installation and Setup####A. DependenciesYou will need the following packages:
+### 1. Installation and Setup
+#### A. DependenciesYou will need the following packages:
 
 ```bash
 dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Abstractions
@@ -268,8 +269,30 @@ The middleware runs **before** your function's core logic. If the lock cannot be
 
 | Attribute Usage | Lock Key | Behavior |
 | --- | --- | --- |
-| `[DistributedLock("GlobalProcess")]` | `GlobalProcess` | Only one instance of this function runs across all hosts. |
-| `[DistributedLock("User-{userId}")]` | `User-1234` | Only one instance runs for a specific user ID (inferred from input). |
+| `[Singleton("GlobalProcess")]` or `[DistributedLock("GlobalProcess")]` | `GlobalProcess` | Only one instance of this function runs across all hosts. |
+| `[Singleton("User-{userId}")]` or `[DistributedLock("User-{userId}")]` | `User-1234` | Only one instance runs for a specific user ID (inferred from input). |
+
+```csharp
+[Function("ProcessOrder")]
+[Singleton("order-lock-{orderId}")] // Key interpolation using input parameter
+public async Task Run([ServiceBusTrigger("orders", Connection = "ServiceBusConn")] 
+                      string message, // Message content (if JSON)
+                      string orderId, // Assumed to be bound from the message or metadata
+                      ILogger log)
+{
+    // The middleware guarantees that if we reach this point, 
+    // the lease for "order-lock-XYZ" is held and actively renewing.
+    
+    log.LogInformation($"Acquired lock for Order ID: {orderId}. Processing critical section...");
+
+    await Task.Delay(TimeSpan.FromMinutes(1)); 
+
+    // Lock is automatically released when the function exits.
+}
+
+```
+
+or
 
 ```csharp
 [Function("ProcessOrder")]
