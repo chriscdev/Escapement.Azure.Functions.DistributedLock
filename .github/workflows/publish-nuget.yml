@@ -34,18 +34,16 @@ jobs:
           VERSION=${{ github.event.release.tag_name }} 
           VERSION=${VERSION#v}
           dotnet pack Azure.Functions.DistributedLock/Azure.Functions.DistributedLock.csproj --configuration Release --no-build -p:PackageVersion=$VERSION
-
-      - name: Install Latest NuGet CLI (Diagnostic)
-        run: dotnet tool install -g nuget.cli
           
       # 3. UPDATED STEP: Push using OIDC token (no separate API key required)
+      - name: Add NuGet V3 Source
+        run: dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget.org --configfile /tmp/nuget.config
+        
       - name: Push to NuGet (Trusted Publishing)
-        # No 'env' block for NUGET_API_KEY is needed now!
         run: |
-          # Use the 'dotnet nuget push' command with the Trusted Publishing parameters.
-          # The NuGet client automatically uses the OIDC token provided by GitHub.
-          # The --api-key is set to 'gh' to signal the use of the OIDC token.
+          # Now, tell the push command to use the source name just defined.
           dotnet nuget push **/bin/Release/*.nupkg \
-            --source "https://api.nuget.org/v3/index.json" \
+            --source "nuget.org" \
             --api-key "gh" \
-            --skip-duplicate
+            --skip-duplicate \
+            --configfile /tmp/nuget.config
