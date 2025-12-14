@@ -33,7 +33,7 @@ jobs:
         run: |
           VERSION=${{ github.event.release.tag_name }} 
           VERSION=${VERSION#v}
-          dotnet pack Azure.Functions.DistributedLock/Azure.Functions.DistributedLock.csproj --configuration Release --no-build -p:PackageVersion=$VERSION
+          dotnet pack Azure.Functions.DistributedLock/Azure.Functions.DistributedLock.csproj --configuration Release --no-build -p:PackageVersion=$VERSION -o artifacts
           
       # 3. STEP: Push using OIDC token
       # Get a short-lived NuGet API key
@@ -45,4 +45,4 @@ jobs:
     
       # Push the package
       - name: NuGet push
-        run: dotnet nuget push artifacts/Azure.Functions.DistributedLock.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push artifacts/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
