@@ -36,20 +36,10 @@ jobs:
           dotnet pack Azure.Functions.DistributedLock/Azure.Functions.DistributedLock.csproj --configuration Release --no-build -p:PackageVersion=$VERSION
           
       # 3. UPDATED STEP: Push using OIDC token (no separate API key required)
-      - name: Set Up Temporary NuGet Config
-        # Create a temporary config file that ONLY contains the V3 source
-        run: |
-          echo "Setting up temporary nuget.config for OIDC push."
-          dotnet new nugetconfig --output /tmp/nuget-oidc
-          dotnet nuget add source https://api.nuget.org/v3/index.json \
-            --name nuget.org \
-            --configfile /tmp/nuget-oidc/NuGet.Config
-          
-      - name: Push to NuGet (Trusted Publishing)
-        # We explicitly tell dotnet to use the newly created, clean config file
+      - name: Push to NuGet (Trusted Publishing - Final Attempt)
+        # The local NuGet.Config now guarantees the V3 source is used.
         run: |
           dotnet nuget push **/bin/Release/*.nupkg \
             --source "nuget.org" \
             --api-key "gh" \
-            --skip-duplicate \
-            --configfile /tmp/nuget-oidc/NuGet.Config
+            --skip-duplicate
