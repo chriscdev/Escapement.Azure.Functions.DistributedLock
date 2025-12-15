@@ -26,14 +26,15 @@ services.AddSingleton(sp => new Azure.Storage.Blobs.BlobServiceClient(
     Environment.GetEnvironmentVariable("AzureWebJobsStorage")
 ));
 services.AddSingleton<IDistributedLockHandlerFactory, BlobLeaseHandlerFactory>();
-// If using middleware: workerApplication.UseMiddleware<DistributedLockMiddleware>();
+// If using attribute then add middleware: workerApplication.UseMiddleware<DistributedLockMiddleware>();
 ```
 
 2) Declarative usage (attribute on function):
 
+Make sure to add the middleware to `Program.cs`
 ```csharp
-[Singleton("ProcessOrder")]
-[DistributedLock("order-lock-{orderId}")]
+[Function("ProcessOrder")]
+[Singleton("order-lock-{orderId}")]
 public async Task Run(string orderId, ILogger log)
 {
     // If this runs, the lock was acquired and is being renewed.
