@@ -1,8 +1,8 @@
-# Azure.Functions.DistributedLock
+# Escapement.Azure.Functions.DistributedLock
 
 A small library to provide distributed locking for Azure Functions (Isolated Worker) using Azure Blob Storage leases. It is a lightweight replacement for `[Microsoft.Azure.WebJobs.Singleton]` that supports declarative attributes and programmatic lock acquisition.
 
-Package: `Azure.Functions.DistributedLock`
+Package: `Escapement.Azure.Functions.DistributedLock`
 
 Summary
 - Declarative locking via `[DistributedLock("key-{id}")]` attribute.

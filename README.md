@@ -1,6 +1,6 @@
-# Azure Functions Distributed Lock (Isolated Worker Model)
+# Escapement.Azure.Functions.DistributedLock (Isolated Worker Model)
 
-This library provides a robust, testable, and customizable replacement for the
+`Escapement.Azure.Functions.DistributedLock` provides a robust, testable, and customizable replacement for the
 `[Microsoft.Azure.WebJobs.Singleton]` attribute, enabling distributed locking
 using Azure Blob Storage leases in the Azure Functions Isolated Worker process.
 This is useful when migrating functions that require concurrency control from

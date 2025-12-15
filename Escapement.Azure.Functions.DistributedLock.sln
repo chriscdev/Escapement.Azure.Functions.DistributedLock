@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Escapement.Azure.Functions.DistributedLock", "Escapement.Azure.Functions.DistributedLock\Escapement.Azure.Functions.DistributedLock.csproj", "{1D5A2704-DE0F-7085-5D75-8185066E96E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Escapement.Azure.Functions.DistributedLock.Test", "Escapement.Azure.Functions.DistributedLock.Test\Escapement.Azure.Functions.DistributedLock.Test.csproj", "{002C76F5-48D0-9241-E8DD-96CF2E627A78}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1D5A2704-DE0F-7085-5D75-8185066E96E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D5A2704-DE0F-7085-5D75-8185066E96E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D5A2704-DE0F-7085-5D75-8185066E96E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D5A2704-DE0F-7085-5D75-8185066E96E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{002C76F5-48D0-9241-E8DD-96CF2E627A78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{002C76F5-48D0-9241-E8DD-96CF2E627A78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{002C76F5-48D0-9241-E8DD-96CF2E627A78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{002C76F5-48D0-9241-E8DD-96CF2E627A78}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C8929D0F-CF08-4792-9A72-BE6C92073F6D}
+	EndGlobalSection
+EndGlobal
