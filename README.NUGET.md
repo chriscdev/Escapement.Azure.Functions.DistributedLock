@@ -36,13 +36,9 @@ var host = new HostBuilder()
     })
     .ConfigureServices(services =>
     {
-        // Assumes "AzureWebJobsStorage" env var is set
-        services.AddSingleton(sp => new BlobServiceClient(
-            Environment.GetEnvironmentVariable("AzureWebJobsStorage")
-        ));
-
         // Register the default distributed lock handler (used by both Declarative usage and Programmatic usage scenarios)
-        services.AddDistributedLock();
+        // Uses the AzureWebJobsStorage environment varaible by default for the Blob storage connection string
+        services.AddBlobServiceDistributedLock();
     })
     .Build();
 

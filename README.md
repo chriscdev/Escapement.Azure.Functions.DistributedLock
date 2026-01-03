@@ -54,8 +54,9 @@ var host = new HostBuilder()
             Environment.GetEnvironmentVariable("AzureWebJobsStorage")
         ));
 
-        // Register the default distributed lock handler (used by both Declarative locking and Direct code acquisition scenarios)
-        services.AddDistributedLock();
+        // Register the default distributed lock handler (used by both Declarative usage and Programmatic usage scenarios)
+        // Uses the AzureWebJobsStorage environment varaible by default for the Blob storage connection string
+        services.AddBlobServiceDistributedLock();
     })
     .Build();
 
