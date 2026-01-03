@@ -5,17 +5,22 @@ using Microsoft.Azure.Functions.Worker.Middleware;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Escapement.Azure.Functions.DistributedLock.Options;
+using Escapement.Azure.Functions.DistributedLock.Exceptions;
+using Microsoft.Extensions.Options;
 
 namespace Escapement.Azure.Functions.DistributedLock.Middleware
 {
   public class DistributedLockMiddleware : IFunctionsWorkerMiddleware
   {
     private readonly IDistributedLockHandlerFactory _lockHandlerFactory;
+    private readonly IOptionsMonitor<DistributedLockOptions> _options;
 
-    // Dependency injection now uses the factory interface
-    public DistributedLockMiddleware(IDistributedLockHandlerFactory lockHandlerFactory)
+    // Dependency injection now uses the factory interface and options
+    public DistributedLockMiddleware(IDistributedLockHandlerFactory lockHandlerFactory, IOptionsMonitor<DistributedLockOptions> options)
     {
       _lockHandlerFactory = lockHandlerFactory;
+      _options = options;
     }
 
     public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
@@ -38,14 +43,25 @@ namespace Escapement.Azure.Functions.DistributedLock.Middleware
       var lockHandler = _lockHandlerFactory.CreateHandler(resolvedLockKey);
 
       // 2. Try to acquire the lock using the abstraction (using will dispose of the lock when it goes out of scope)
-      await using var lockHandle = await lockHandler.TryAcquireLockAsync(resolvedLockKey);
+      var logger = context.GetLogger<DistributedLockMiddleware>();
+
+      // Configure timeout from options, fallback to 30s if not set
+      var waitTimeout = _options?.CurrentValue?.WaitTimeout ?? TimeSpan.FromSeconds(30);
+
+      // Link the function cancellation token (if any) so we respect host shutdown
+      var functionCancellation = GetFunctionCancellationToken(context);
+
+      using var timeoutCts = new CancellationTokenSource(waitTimeout);
+      using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, functionCancellation);
+
+      await using var lockHandle = await lockHandler.WaitForAcquireLockAsync(resolvedLockKey, linkedCts.Token);
 
       if (lockHandle == null)
       {
-        var logger = context.GetLogger<DistributedLockMiddleware>();
-        logger.LogWarning("Singleton lock {LockKey} is already held. Skipping execution.", resolvedLockKey);
-        return; // Skip execution if lock not acquired
+        logger.LogError("Lock acquisition timed out for {LockKey} after {Timeout}", resolvedLockKey, waitTimeout);
+        throw new LockUnavailableException(resolvedLockKey);
       }
+
 
       // 3. Lock acquired, proceed with function execution
       await next(context);
@@ -53,7 +69,7 @@ namespace Escapement.Azure.Functions.DistributedLock.Middleware
 
     private string ResolveTemplate(string template, FunctionContext context)
     {
-      if (string.IsNullOrEmpty(template)) return "default-lock";
+      if (string.IsNullOrEmpty(template)) return context.FunctionDefinition.Name; // Default to function name if template is empty
 
       var result = template;
       var bindingData = context.BindingContext.BindingData;
@@ -82,6 +98,19 @@ namespace Escapement.Azure.Functions.DistributedLock.Middleware
       // Replace invalid blob name characters with hyphens
       // Blob names allow alphanumeric, hyphens, and dots mostly.
       return Regex.Replace(name, @"[^a-zA-Z0-9\.\-]", "-").ToLowerInvariant();
+    }
+
+    private CancellationToken GetFunctionCancellationToken(FunctionContext context)
+    {
+      // Use reflection to avoid compile-time dependency on a specific FunctionContext shape
+      var prop = context.GetType().GetProperty("CancellationToken", BindingFlags.Public | BindingFlags.Instance);
+      if (prop != null && prop.PropertyType == typeof(CancellationToken))
+      {
+        var value = prop.GetValue(context);
+        if (value is CancellationToken ct) return ct;
+      }
+
+      return CancellationToken.None;
     }
   }
 }

@@ -2,7 +2,9 @@ using System.Reflection;
 using Azure.Storage.Blobs;
 using Escapement.Azure.Functions.DistributedLock.Handlers;
 using Escapement.Azure.Functions.DistributedLock.Middleware;
+using Escapement.Azure.Functions.DistributedLock.Options;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Escapement.Azure.Functions.DistributedLock.Test.Middleware
@@ -15,7 +17,7 @@ namespace Escapement.Azure.Functions.DistributedLock.Test.Middleware
       // Return a loose BlobContainerClient so constructor's CreateIfNotExists call is harmless
       mockBlobService.Setup(s => s.GetBlobContainerClient(It.IsAny<string>())).Returns(new Mock<BlobContainerClient>().Object);
 
-      return new DistributedLockMiddleware(new BlobLeaseHandlerFactory(mockBlobService.Object));
+      return new DistributedLockMiddleware(new BlobLeaseHandlerFactory(mockBlobService.Object), Mock.Of<IOptionsMonitor<DistributedLockOptions>>());
     }
 
     private string InvokeResolveTemplate(DistributedLockMiddleware middleware, string template, IDictionary<string, object> bindingData)

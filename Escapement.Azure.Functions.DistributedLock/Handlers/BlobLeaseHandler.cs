@@ -12,7 +12,7 @@ namespace Escapement.Azure.Functions.DistributedLock.Handlers
 
     public BlobLeaseHandler(BlobServiceClient client)
     {
-      _containerClient = client.GetBlobContainerClient("locks");
+      _containerClient = client.GetBlobContainerClient("escapement-locks");
       _containerClient.CreateIfNotExists();
     }
 
@@ -87,7 +87,7 @@ namespace Escapement.Azure.Functions.DistributedLock.Handlers
     public async Task<ILockHandle?> WaitForAcquireLockAsync(string lockKey, CancellationToken ct)
     {
       if (ct.IsCancellationRequested) return null;
-      return await WaitForAcquireLockAsync(lockKey, TimeSpan.MaxValue, ct);
+      return await WaitForAcquireLockAsync(lockKey, TimeSpan.FromDays(40), ct); //max is 50 days, see Timer.MaxSupportedTimeout.
     }
 
     /// <summary>

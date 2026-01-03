@@ -1,8 +1,10 @@
+using Azure.Storage.Blobs;
 using Escapement.Azure.Functions.DistributedLock.Handlers;
 using Escapement.Azure.Functions.DistributedLock.Middleware;
-using Azure.Storage.Blobs;
+using Escapement.Azure.Functions.DistributedLock.Options;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Middleware;
+using Microsoft.Extensions.Options;
 using Moq;
 using System.Reflection;
 
@@ -16,7 +18,7 @@ namespace Escapement.Azure.Functions.DistributedLock.Test.Middleware
       var mockBlobService = new Mock<BlobServiceClient>(MockBehavior.Strict);
       mockBlobService.Setup(s => s.GetBlobContainerClient(It.IsAny<string>())).Returns(new Mock<BlobContainerClient>().Object);
 
-      var middleware = new DistributedLockMiddleware(new BlobLeaseHandlerFactory(mockBlobService.Object));
+      var middleware = new DistributedLockMiddleware(new BlobLeaseHandlerFactory(mockBlobService.Object), Mock.Of<IOptionsMonitor<DistributedLockOptions>>());
 
       var mockContext = new Mock<FunctionContext>();
       var didCallNext = false;
@@ -34,7 +36,7 @@ namespace Escapement.Azure.Functions.DistributedLock.Test.Middleware
       var mockBlobService = new Mock<BlobServiceClient>(MockBehavior.Strict);
       mockBlobService.Setup(s => s.GetBlobContainerClient(It.IsAny<string>())).Returns(new Mock<BlobContainerClient>().Object);
 
-      var middleware = new DistributedLockMiddleware(new BlobLeaseHandlerFactory(mockBlobService.Object));
+      var middleware = new DistributedLockMiddleware(new BlobLeaseHandlerFactory(mockBlobService.Object), Mock.Of<IOptionsMonitor<DistributedLockOptions>>());
 
       var mockContext = new Mock<FunctionContext>();
       var mockFuncDef = new Mock<FunctionDefinition>();
@@ -55,7 +57,7 @@ namespace Escapement.Azure.Functions.DistributedLock.Test.Middleware
       var mockBlobService = new Mock<BlobServiceClient>(MockBehavior.Strict);
       mockBlobService.Setup(s => s.GetBlobContainerClient(It.IsAny<string>())).Returns(new Mock<BlobContainerClient>().Object);
 
-      var middleware = new DistributedLockMiddleware(new BlobLeaseHandlerFactory(mockBlobService.Object));
+      var middleware = new DistributedLockMiddleware(new BlobLeaseHandlerFactory(mockBlobService.Object), Mock.Of<IOptionsMonitor<DistributedLockOptions>>());
 
       var mockContext = new Mock<FunctionContext>();
       var mockFuncDef = new Mock<FunctionDefinition>();

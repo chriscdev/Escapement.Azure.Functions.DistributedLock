@@ -22,16 +22,24 @@ Quick start
 1) Register services in `Program.cs`:
 
 ```csharp
-services.AddSingleton(sp => new Azure.Storage.Blobs.BlobServiceClient(
-    Environment.GetEnvironmentVariable("AzureWebJobsStorage")
-));
-services.AddSingleton<IDistributedLockHandlerFactory, BlobLeaseHandlerFactory>();
-// If using attribute then add middleware: workerApplication.UseMiddleware<DistributedLockMiddleware>();
+var host = new HostBuilder()
+    .ConfigureFunctionsWebApplication(webApp =>
+    {
+      //webApp.UseMiddleware<DistributedLockMiddleware>(); <-- Add if using [Singleton] or [DistributedLock] attributes
+    })
+    .ConfigureServices(services => {
+      services.AddApplicationInsightsTelemetryWorkerService();
+      services.ConfigureFunctionsApplicationInsights();
+      services.AddSingleton(sp => new BlobServiceClient(Environment.GetEnvironmentVariable("AzureWebJobsStorage")));
+      services.AddSingleton<IDistributedLockHandlerFactory, BlobLeaseHandlerFactory>(); 
+    })
+    .Build();
+
 ```
 
 2) Declarative usage (attribute on function):
 
-Make sure to add the middleware to `Program.cs`
+Make sure to add the `DistributedLockMiddleware` middleware to `Program.cs`
 ```csharp
 [Function("ProcessOrder")]
 [Singleton("order-lock-{orderId}")]
@@ -53,6 +61,8 @@ public async Task Run(string orderId, ILogger log)
 ```
 
 3) Programmatic usage (fine-grained control):
+
+Does not use the middleware.
 
 ```csharp
 var handler = _lockHandlerFactory.CreateHandler();
