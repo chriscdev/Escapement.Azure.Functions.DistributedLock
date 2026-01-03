@@ -4,40 +4,53 @@ A small library to provide distributed locking for Azure Functions (Isolated Wor
 
 Package: `Escapement.Azure.Functions.DistributedLock`
 
-Summary
+## Summary
 - Declarative locking via `[Singleton("key-{id}")]` attribute for in-place migration from in-process to isolated Functions worker model.
 - Declarative locking via `[DistributedLock("key-{id}")]` attribute.
 - Programmatic locking via `IDistributedLockHandlerFactory` and `IDistributedLockHandler`.
 - Uses Azure Blob leases with automatic background renewal and safe release.
 - Testable design suitable for unit tests.
 
-Install
+## Install
 
 ```bash
 dotnet add package Escapement.Azure.Functions.DistributedLock
 ```
 
-Quick start
+## Quick start
 
-1) Register services in `Program.cs`:
+### 1) Register services in `Program.cs`:
 
 ```csharp
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Azure.Storage.Blobs;
+using Escapement.Azure.Functions.DistributedLock.Middleware; //exclude if not using the middleware
+using Escapement.Azure.Functions.DistributedLock;
+
 var host = new HostBuilder()
-    .ConfigureFunctionsWebApplication(webApp =>
+    .ConfigureFunctionsWorkerDefaults(workerApplication =>
     {
-      //webApp.UseMiddleware<DistributedLockMiddleware>(); <-- Add if using [Singleton] or [DistributedLock] attributes
+        // Register middleware if using the [Singleton] or [DistributedLock] attributes
+        workerApplication.UseMiddleware<DistributedLockMiddleware>();
     })
-    .ConfigureServices(services => {
-      services.AddApplicationInsightsTelemetryWorkerService();
-      services.ConfigureFunctionsApplicationInsights();
-      services.AddSingleton(sp => new BlobServiceClient(Environment.GetEnvironmentVariable("AzureWebJobsStorage")));
-      services.AddSingleton<IDistributedLockHandlerFactory, BlobLeaseHandlerFactory>(); 
+    .ConfigureServices(services =>
+    {
+        // Assumes "AzureWebJobsStorage" env var is set
+        services.AddSingleton(sp => new BlobServiceClient(
+            Environment.GetEnvironmentVariable("AzureWebJobsStorage")
+        ));
+
+        // Register the default distributed lock handler (used by both Declarative usage and Programmatic usage scenarios)
+        services.AddDistributedLock();
     })
     .Build();
 
+await host.RunAsync();
+
 ```
 
-2) Declarative usage (attribute on function):
+### 2) Declarative usage (attribute on function):
 
 Make sure to add the `DistributedLockMiddleware` middleware to `Program.cs`
 ```csharp
@@ -60,7 +73,7 @@ public async Task Run(string orderId, ILogger log)
 }
 ```
 
-3) Programmatic usage (fine-grained control):
+### 3) Programmatic usage (fine-grained control):
 
 Does not use the middleware.
 
@@ -71,9 +84,17 @@ if (handle == null) { /* locked: skip or retry */ }
 // critical section
 ```
 
-Recommendations
+## Attribute examples
+
+| Attribute usage | Lock key | Behavior |
+|---|---:|---|
+| `[Singleton]` or `[DistributedLock]` | `Function name` | Only one instance runs per function accross all hosts (default). |
+| `[Singleton("GlobalProcess")]` or `[DistributedLock("GlobalProcess")]` | `GlobalProcess` | Only one instance runs across all hosts. |
+| `[Singleton("User-{userId}")]` or `[DistributedLock("User-{userId}")]` | `User-1234` | Only one instance runs for a specific user ID. |
+
+## Recommendations
 - Use a consistent storage account and container name across hosts.
 - Prefer `WaitForAcquireLockAsync` with timeout for background jobs that must complete.
 
-License and contribution
+## License and contribution
 See repository for full docs, tests, and contribution guidelines.

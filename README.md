@@ -1,4 +1,4 @@
-# Azure Functions Distributed Lock (Isolated Worker Model)
+# Escapement Azure Functions Distributed Lock (Isolated Worker Model)
 
 This library provides a robust, testable, and customizable replacement for the
 `[Microsoft.Azure.WebJobs.Singleton]` attribute, enabling distributed locking
@@ -38,11 +38,13 @@ Register the Azure SDK client and the lock handler factory in `Program.cs`.
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Azure.Storage.Blobs;
+using Escapement.Azure.Functions.DistributedLock.Middleware; //exclude if not using the middleware
+using Escapement.Azure.Functions.DistributedLock;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults(workerApplication =>
     {
-        // Register middleware if you provide it
+        // Register middleware if using the [Singleton] or [DistributedLock] attributes
         workerApplication.UseMiddleware<DistributedLockMiddleware>();
     })
     .ConfigureServices(services =>
@@ -52,12 +54,12 @@ var host = new HostBuilder()
             Environment.GetEnvironmentVariable("AzureWebJobsStorage")
         ));
 
-        // Register handler factory that creates IDistributedLockHandler instances
-        services.AddSingleton<IDistributedLockHandlerFactory, BlobLeaseHandlerFactory>();
+        // Register the default distributed lock handler (used by both Declarative locking and Direct code acquisition scenarios)
+        services.AddDistributedLock();
     })
     .Build();
 
-host.Run();
+await host.RunAsync();
 ```
 
 ---
@@ -72,6 +74,7 @@ Attribute examples
 
 | Attribute usage | Lock key | Behavior |
 |---|---:|---|
+| `[Singleton]` or `[DistributedLock]` | `Function name` | Only one instance runs per function accross all hosts (default). |
 | `[Singleton("GlobalProcess")]` or `[DistributedLock("GlobalProcess")]` | `GlobalProcess` | Only one instance runs across all hosts. |
 | `[Singleton("User-{userId}")]` or `[DistributedLock("User-{userId}")]` | `User-1234` | Only one instance runs for a specific user ID. |
 
